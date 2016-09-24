@@ -114,89 +114,107 @@ void goToPosition( float posn[] , float tolerance , int inc ) {
 void loop(){
 	//This function is called once per second.  Use it to control the satellite.
 	api.getMyZRState(myState);
-    if      (step == 1) {
-        DEBUG(("step %d",step));
-        game.dropSPS();
-        step++;
-    }
-    else if (step == 2) {
-        DEBUG(("step %d",step));
-        goToPosition(spsPosn[0],spsTolerance, STEP_INC);
-    }
-    else if (step == 3) {
-        DEBUG(("step %d",step));
-        game.dropSPS();
-        step++;
-    }
-    else if (step == 4) {
-        DEBUG(("step %d",step));
-        goToPosition(spsPosn[1],spsTolerance, STEP_INC);
-    }
-    else if (step == 5) {
-        DEBUG(("step %d",step));
-        game.dropSPS();
-        step++;
-    }
-    else if (step == 6 ) {
-        DEBUG(("step %d",step));
-        goToPosition(itemPosn[LARGE_1],0.02,STEP_NO_INC);
-        api.setAttitudeTarget(faceDown);
-        if ( game.dockItem() ) {
-            DEBUG(("Picked up item"));
+
+	switch(step) {
+
+        case 1:
+            DEBUG(("step %d",step));
+            game.dropSPS();
             step++;
-        }
-    }
-    else if (step == 7 ) {
-        DEBUG(("step %d",step));
-        DEBUG(("item 0 picked up by %d",game.hasItem(0)));
-        if ( game.getZone(zoneInfo) ) {
-            DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
-        }
-        zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
-        zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
-        step++;
-    }
-    else if (step == 8 ) {
-        DEBUG(("step %d",step));
-        goToPosition(zonePosn,0.01,STEP_INC);
-    }
-    else if (step == 9 ) {
-        DEBUG(("step %d",step));
-        game.dropItem();
-        DEBUG(("Dropped item"));
-        step++;
-    }
-    else if (step == 10 ) {
-        DEBUG(("step %d",step));
-        goToPosition(itemPosn[LARGE_2],0.02,STEP_NO_INC);
-        api.setAttitudeTarget(faceDown);
-        if ( game.dockItem() ) {
-            DEBUG(("Picked up item"));
+            break ;
+
+        case 2:
+            DEBUG(("step %d",step));
+            goToPosition(spsPosn[0],spsTolerance, STEP_INC);
+            break ;
+
+        case 3:
+            DEBUG(("step %d",step));
+            game.dropSPS();
             step++;
-        }
-    }
-    else if (step == 11 ) {
-        DEBUG(("step %d",step));
-        DEBUG(("item 1 picked up by %d",game.hasItem(1)));
-        if ( game.getZone(zoneInfo) ) {
-            DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
-        }
-        zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
-        zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
-        step++;
-    }
-    else if (step == 12 ) {
-        DEBUG(("step %d",step));
-        goToPosition(zonePosn,0.01,STEP_INC);
-    }
-    else if (step == 13 ) {
-        DEBUG(("step %d",step));
-        game.dropItem();
-        DEBUG(("Dropped item"));
-        step++;
-    }
-    else if (step == 14) {
-        DEBUG(("Score = %f", game.getScore()));
-        goToPosition(origin,0.01,STEP_NO_INC);
-    }
+            break;
+
+        case 4:
+            DEBUG(("step %d",step));
+            goToPosition(spsPosn[1],spsTolerance, STEP_INC);
+            break ;
+
+        case 5:
+            DEBUG(("step %d",step));
+            game.dropSPS();
+            step++;
+            break ;
+
+        case 6:
+            DEBUG(("step %d",step));
+            goToPosition(itemPosn[LARGE_1],0.02,STEP_NO_INC);
+            api.setAttitudeTarget(faceDown);
+            if ( game.dockItem() ) {
+                DEBUG(("Picked up item"));
+                step++;
+            }
+            break;
+
+        case 7:
+            DEBUG(("step %d",step));
+            DEBUG(("item 0 picked up by %d",game.hasItem(0)));
+            if ( game.getZone(zoneInfo) ) {
+                DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
+            }
+            zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
+            zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
+            step++;
+            break;
+
+        case 8:
+            DEBUG(("step %d",step));
+            goToPosition(zonePosn,0.01,STEP_INC);
+            break;
+
+        case 9:
+            DEBUG(("step %d",step));
+            game.dropItem();
+            DEBUG(("Dropped item"));
+            step++;
+            break;
+
+        case 10:
+            DEBUG(("step %d",step));
+            goToPosition(itemPosn[LARGE_2],0.02,STEP_NO_INC);
+            api.setAttitudeTarget(faceDown);
+            if ( game.dockItem() ) {
+                DEBUG(("Picked up item"));
+                step++;
+            }
+            break;
+
+        case 11:
+            DEBUG(("step %d",step));
+            DEBUG(("item 1 picked up by %d",game.hasItem(1)));
+            if ( game.getZone(zoneInfo) ) {
+                DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
+            }
+            zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
+            zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
+            step++;
+            break ;
+
+        case 12:
+            DEBUG(("step %d",step));
+            goToPosition(zonePosn,0.01,STEP_INC);
+            break ;
+
+        case 13:
+            DEBUG(("step %d",step));
+            game.dropItem();
+            DEBUG(("Dropped item"));
+            step++;
+            break;
+
+        case 14:
+            DEBUG(("Score = %f", game.getScore()));
+            goToPosition(origin,0.01,STEP_NO_INC);
+            break;
+
+	}//switch
 }
