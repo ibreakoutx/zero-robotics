@@ -1,21 +1,38 @@
 //Declare any variables shared between functions here
 
-float spsPosn1[3];
-float spsPosn2[3];
-float spsPosn3[3];
-float itemLarge1[3];
-float itemLarge2[3];
+#define LARGE_1  0
+#define LARGE_2  1
+#define MEDIUM_1 2
+#define MEDIUM_2 3
+#define SMALL_1  4
+#define SMALL_2  5
+
+#define STEP_INC    1
+#define STEP_NO_INC 0
+
+float spsPosn[3][3];
+float itemPosn[6][3];
+float itemApproachOffset[6];
+
+float origin[3];
+
 float faceDown[3];
 float faceUp[3];
 float faceLeft[3];
 float faceRight[3];
+
 float zoneInfo[4];
 float myState[12];
 float zonePosn[3];
 float zoneCenterOffset ;
 
+float itemLargeApproachOffset ;
+float itemMediumApproachOffset ;
+float itemSmallApproachOffset ;
+
 int step ;
 float tolerance ;
+float spsTolerance ;
 
 void init(){
 	//This function is called once when your code is first loaded.
@@ -25,21 +42,38 @@ void init(){
 	tolerance = 0.02;
 	zoneCenterOffset = 0.15;
 
-	spsPosn1[0] =  0.50;
-	spsPosn1[1] = -0.55;
-	spsPosn1[2] =  0.0;
+	itemApproachOffset[LARGE_1]=0.16;
+	itemApproachOffset[LARGE_2]=0.16;
+	itemMediumApproachOffset = 0.10 ;
+	itemSmallApproachOffset = 0.07 ;
 
-	spsPosn2[0] =  0.50;
-	spsPosn2[1] =  0.55;
-	spsPosn2[2] =  0.0;
+	spsPosn[0][0] =  0.50;
+	spsPosn[0][1] = -0.55;
+	spsPosn[0][2] =  0.0;
 
-	spsPosn3[0] = -0.50;
-	spsPosn3[1] = -0.55;
-	spsPosn3[2] =  0.0;
+	spsPosn[1][0] =  0.50;
+	spsPosn[1][1] =  0.55;
+	spsPosn[1][2] =  0.0;
 
-	itemLarge1[0] = 0.23;
-	itemLarge1[1] = 0.36;
-	itemLarge1[2] = 0.0 ;
+	spsPosn[2][0] = -0.50;
+	spsPosn[2][1] = -0.55;
+	spsPosn[2][2] =  0.0;
+
+	//Larger values will get sphere to drop SPS
+	//before reaching target position
+	spsTolerance = 0.3 ;
+
+	origin[0] = 0.0;
+	origin[1] = 0.0;
+	origin[2] = 0.0;
+
+	itemPosn[LARGE_1][0] = 0.23;
+	itemPosn[LARGE_1][1] = 0.23 + itemApproachOffset[LARGE_1] ;
+	itemPosn[LARGE_1][3] = 0.0 ;
+
+	itemPosn[LARGE_2][0] = -0.23;
+	itemPosn[LARGE_2][1] = -0.23 + itemApproachOffset[LARGE_2] ;
+	itemPosn[LARGE_2][3] = 0.0 ;
 
 	faceDown[0] = 0.0;
 	faceDown[1] = -1.0;
@@ -67,14 +101,14 @@ float ABS(float a) {
         return a ;
 }
 
-void goToPosition( float posn[] , float tolerance ) {
+void goToPosition( float posn[] , float tolerance , int inc ) {
     float err = ABS(myState[0]-posn[0]) + ABS(myState[1]-posn[1]);
     DEBUG(("myState[0]=%f, myState[1]=%f",myState[0],myState[1]));
     DEBUG(("posn[0]=%f, posn[1]=%f, err=%f",posn[0],posn[1],err));
     if (err > tolerance)
         api.setPositionTarget(posn);
-    else
-        step++;
+    else if (inc)
+            step++;
 }
 
 void loop(){
@@ -87,7 +121,7 @@ void loop(){
     }
     else if (step == 2) {
         DEBUG(("step %d",step));
-        goToPosition(spsPosn1,0.3);
+        goToPosition(spsPosn[0],spsTolerance, STEP_INC);
     }
     else if (step == 3) {
         DEBUG(("step %d",step));
@@ -96,7 +130,7 @@ void loop(){
     }
     else if (step == 4) {
         DEBUG(("step %d",step));
-        goToPosition(spsPosn2,0.3);
+        goToPosition(spsPosn[1],spsTolerance, STEP_INC);
     }
     else if (step == 5) {
         DEBUG(("step %d",step));
@@ -105,7 +139,7 @@ void loop(){
     }
     else if (step == 6 ) {
         DEBUG(("step %d",step));
-        goToPosition(itemLarge1,0.02);
+        goToPosition(itemPosn[LARGE_1],0.02,STEP_NO_INC);
         api.setAttitudeTarget(faceDown);
         if ( game.dockItem() ) {
             DEBUG(("Picked up item"));
@@ -124,7 +158,7 @@ void loop(){
     }
     else if (step == 8 ) {
         DEBUG(("step %d",step));
-        goToPosition(zonePosn,0.01);
+        goToPosition(zonePosn,0.01,STEP_INC);
     }
     else if (step == 9 ) {
         DEBUG(("step %d",step));
@@ -132,8 +166,37 @@ void loop(){
         DEBUG(("Dropped item"));
         step++;
     }
-    else if (step == 10) {
-        DEBUG(("Score = %f", game.getScore()));
+    else if (step == 10 ) {
+        DEBUG(("step %d",step));
+        goToPosition(itemPosn[LARGE_2],0.02,STEP_NO_INC);
+        api.setAttitudeTarget(faceDown);
+        if ( game.dockItem() ) {
+            DEBUG(("Picked up item"));
+            step++;
+        }
     }
-
+    else if (step == 11 ) {
+        DEBUG(("step %d",step));
+        DEBUG(("item 1 picked up by %d",game.hasItem(1)));
+        if ( game.getZone(zoneInfo) ) {
+            DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
+        }
+        zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
+        zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
+        step++;
+    }
+    else if (step == 12 ) {
+        DEBUG(("step %d",step));
+        goToPosition(zonePosn,0.01,STEP_INC);
+    }
+    else if (step == 13 ) {
+        DEBUG(("step %d",step));
+        game.dropItem();
+        DEBUG(("Dropped item"));
+        step++;
+    }
+    else if (step == 14) {
+        DEBUG(("Score = %f", game.getScore()));
+        goToPosition(origin,0.01,STEP_NO_INC);
+    }
 }
