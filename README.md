@@ -1,4 +1,4 @@
-#### zero robotics
+# zero robotics
 TODO:
 =====
 1. Function to find nearest item not picked up.
@@ -13,6 +13,7 @@ TODO:
    time to pick up items.
 
 Notes:
+======
 1. Noticed that setTargetPostion automatically avoids opposing
    sphere.
 2. 9/30 qualification: Get non-zero score. Relatively trivial 
