@@ -298,45 +298,7 @@ void loop(){
             getItemApproachInfo( item_id, posn, orient ) ;
             DEBUG(("posn: %f, %f, %f",posn[0],posn[1],posn[2]));
             DEBUG(("orient: %f, %f, %f",orient[0],orient[1],orient[2]));
-            step=6;
-            break;
-
-        case 10:
-            DEBUG(("step %d",step));
-            goToPosition(itemPosn[LARGE_2],0.02,STEP_NO_INC);
-            api.setAttitudeTarget(faceDown);
-            if ( game.dockItem() ) {
-                DEBUG(("Picked up item"));
-                step++;
-            }
-            break;
-
-        case 11:
-            DEBUG(("step %d",step));
-            DEBUG(("item 1 picked up by %d",game.hasItem(1)));
-            if ( game.getZone(zoneInfo) ) {
-                DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
-            }
-            zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
-            zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
-            step++;
-            break ;
-
-        case 12:
-            DEBUG(("step %d",step));
-            goToPosition(zonePosn,0.01,STEP_INC);
-            break ;
-
-        case 13:
-            DEBUG(("step %d",step));
-            game.dropItem();
-            DEBUG(("Dropped item"));
-            step++;
-            break;
-
-        case 14:
-            DEBUG(("Score = %f", game.getScore()));
-            goToPosition(origin,0.01,STEP_NO_INC);
+            step=6;//Go back and pick up next item
             break;
 
 	}//switch
