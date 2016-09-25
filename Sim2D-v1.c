@@ -1,5 +1,35 @@
 //Declare any variables shared between functions here
+/*
+2-D Intro game, with opponent sphere not operational.
+Uses setTargetPosition to move sphere to specified coord.
+Strategy:
+1. Map out triangle by dropping SPS. To save time, first
+   SPS dropped at start location of sphere. 2nd (and last)
+   location is close to item LARGE_1.
+2. Pick up item LARGE_1. Approaching from the top.
+3. Move to Assembly zone, drop off LARGE_1.
+4. Find next item that is closest.
+5. Compute coordinates and orientation to approach.
+6. Pick and drop off at assembly zone.
+7. Repeat steps 4 through 6 until time runs out or no more
+   items.
+*/
 
+#define NUMBER_OF_ITEMS 6
+#define NUMBER_OF_SPS   3
+#define OPPONENT_ID     2
+
+#define X_COORD 0
+#define Y_COORD 1
+#define Z_COORD 2
+#define X_VELOCITY 3
+#define Y_VELOCITY 4
+#define Z_VELOCITY 5
+#define X_ORIENT 6
+#define Y_ORIENT 7
+#define Z_ORIENT 8
+
+//Item IDs
 #define LARGE_1  0
 #define LARGE_2  1
 #define MEDIUM_1 2
@@ -7,15 +37,31 @@
 #define SMALL_1  4
 #define SMALL_2  5
 
+//Option passed to functions
+//indicating if they can increment
+//the step counter
 #define STEP_INC    1
 #define STEP_NO_INC 0
 
-float spsPosn[3][3];
-float itemPosn[6][3];
-float itemApproachOffset[6];
+//Target positions to drop off the SPS
+float spsPosn[NUMBER_OF_SPS][3];
+
+//Coordinates of the center of each item
+float itemPosn[NUMBER_OF_ITEMS][3];
+
+//In order to pick up the item, the target
+//coordinates of the sphere must be offset
+//from the center of the item
+float itemApproachOffset[NUMBER_OF_ITEMS];
+
+//Initialized to all 1s, set to 0, when
+//corresponding item no longer available
+//already picked up you or opponent.
+int itemAvailable[NUMBER_OF_ITEMS] ;
 
 float origin[3];
 
+//Sphere orientations
 float faceDown[3];
 float faceUp[3];
 float faceLeft[3];
@@ -26,13 +72,13 @@ float myState[12];
 float zonePosn[3];
 float zoneCenterOffset ;
 
-float itemLargeApproachOffset ;
-float itemMediumApproachOffset ;
-float itemSmallApproachOffset ;
-
 int step ;
 float tolerance ;
 float spsTolerance ;
+float zonePosnTolerance ;
+float posn[3];
+float orient[3];
+int item_id;
 
 void init(){
 	//This function is called once when your code is first loaded.
@@ -41,11 +87,14 @@ void init(){
 	step = 1;
 	tolerance = 0.02;
 	zoneCenterOffset = 0.15;
+	zonePosnTolerance = 0.03;
 
 	itemApproachOffset[LARGE_1]=0.16;
 	itemApproachOffset[LARGE_2]=0.16;
-	itemMediumApproachOffset = 0.10 ;
-	itemSmallApproachOffset = 0.07 ;
+    itemApproachOffset[MEDIUM_1]=0.16;
+	itemApproachOffset[MEDIUM_2]=0.16;
+	itemApproachOffset[SMALL_1]=0.16;
+	itemApproachOffset[SMALL_2]=0.16;
 
 	spsPosn[0][0] =  0.50;
 	spsPosn[0][1] = -0.55;
@@ -67,13 +116,18 @@ void init(){
 	origin[1] = 0.0;
 	origin[2] = 0.0;
 
-	itemPosn[LARGE_1][0] = 0.23;
-	itemPosn[LARGE_1][1] = 0.23 + itemApproachOffset[LARGE_1] ;
-	itemPosn[LARGE_1][3] = 0.0 ;
+	//Initialize itemPosn array
+	//Items don't move, so calculate just once.
+	for(int i=0;i<NUMBER_OF_ITEMS;i++) {
+	    game.getItemLoc( itemPosn[i] , i);
+	}
+/*	itemPosn[LARGE_1][X_COORD] = 0.23;
+	itemPosn[LARGE_1][Y_COORD] = 0.23  ;
+	itemPosn[LARGE_1][Z_COORD] = 0.0 ;
 
-	itemPosn[LARGE_2][0] = -0.23;
-	itemPosn[LARGE_2][1] = -0.23 + itemApproachOffset[LARGE_2] ;
-	itemPosn[LARGE_2][3] = 0.0 ;
+	itemPosn[LARGE_2][X_COORD] = -0.23;
+	itemPosn[LARGE_2][Y_COORD] = -0.23  ;
+	itemPosn[LARGE_2][Z_COORD] = 0.0 ;*/
 
 	faceDown[0] = 0.0;
 	faceDown[1] = -1.0;
@@ -92,6 +146,18 @@ void init(){
 	zonePosn[1]=0.0;
 	zonePosn[2]=0.0;
 
+	for (int i=0;i<NUMBER_OF_ITEMS;i++)
+	    itemAvailable[i] = 1;
+	//itemAvailable[LARGE_1] = 0;
+	//itemAvailable[LARGE_2] = 0;
+}
+
+//Compute distance between 2 coordinates
+float computeDistance( float a[], float b[]) {
+    float sum = 0;
+    for (int i=0; i<3; i++)
+        sum = sum + (a[i]-b[i])*(a[i]-b[i]) ;
+    return sqrt(sum);
 }
 
 float ABS(float a) {
@@ -99,6 +165,50 @@ float ABS(float a) {
         return -a ;
     else
         return a ;
+}
+
+//Based on current position of sphere, return ID of
+//closest available item
+int getClosestAvailableItem() {
+    float minDist = 10.0;//Initialize to large value
+    int minDistItem = NUMBER_OF_ITEMS + 1 ; //Initialize to ID out of bounds
+    for(int i=0;i<NUMBER_OF_ITEMS;i++) {
+        if ( itemAvailable[i] && game.hasItem(i) != OPPONENT_ID ) {
+             float dist = computeDistance(myState,itemPosn[i]);
+             if ( minDist > dist) {
+                 minDist = dist ;
+                 minDistItem = i;
+             }
+        }
+    }//for
+    return minDistItem ;
+}
+
+void setFloatArray(float target[], float source[], int size) {
+    for(int i=0;i<size;i++){
+        target[i] = source[i];
+    }
+}
+
+//Based on sphere's current position compute target coordinates
+//of item to be picked up and orientation to pick up item.
+//For example if the sphere is above the item, the target
+//coordinate will be offset along the +Y direction.
+//The output orientation will be available in the orient[]
+//array. If the sphere is below the item and is oriented
+//in the -Y direction, it will have to reorient to the +Y
+//direction.
+void getItemApproachInfo( int itemId, float posn[], float orient[] ) {
+    setFloatArray(posn, itemPosn[itemId],3);
+    //Is sphere above, if so approach from above with faceDown orientation
+    if ( myState[Y_COORD] > itemPosn[itemId][Y_COORD] ) {
+        setFloatArray(orient,faceDown,3);
+        posn[Y_COORD] = posn[Y_COORD] + itemApproachOffset[itemId];
+    }
+    else { //sphere is below, approach with faceUp orientation
+        setFloatArray(orient,faceUp,3);
+        posn[Y_COORD] = posn[Y_COORD] - itemApproachOffset[itemId];
+    }
 }
 
 void goToPosition( float posn[] , float tolerance , int inc ) {
@@ -142,13 +252,18 @@ void loop(){
         case 5:
             DEBUG(("step %d",step));
             game.dropSPS();
+            item_id = getClosestAvailableItem() ;
+            DEBUG(("Closest item is: %d",item_id));
+            getItemApproachInfo( item_id, posn, orient ) ;
+            DEBUG(("posn: %f, %f, %f",posn[0],posn[1],posn[2]));
+            DEBUG(("orient: %f, %f, %f",orient[0],orient[1],orient[2]));
             step++;
             break ;
 
         case 6:
             DEBUG(("step %d",step));
-            goToPosition(itemPosn[LARGE_1],0.02,STEP_NO_INC);
-            api.setAttitudeTarget(faceDown);
+            goToPosition(posn,0.02,STEP_NO_INC);
+            api.setAttitudeTarget(orient);
             if ( game.dockItem() ) {
                 DEBUG(("Picked up item"));
                 step++;
@@ -168,14 +283,22 @@ void loop(){
 
         case 8:
             DEBUG(("step %d",step));
-            goToPosition(zonePosn,0.01,STEP_INC);
+            goToPosition(zonePosn,zonePosnTolerance,STEP_INC);
             break;
 
         case 9:
             DEBUG(("step %d",step));
             game.dropItem();
             DEBUG(("Dropped item"));
-            step++;
+            //Indicate this item is no longer available
+            itemAvailable[item_id] = 0;
+
+            item_id = getClosestAvailableItem() ;
+            DEBUG(("Closest item is: %d",item_id));
+            getItemApproachInfo( item_id, posn, orient ) ;
+            DEBUG(("posn: %f, %f, %f",posn[0],posn[1],posn[2]));
+            DEBUG(("orient: %f, %f, %f",orient[0],orient[1],orient[2]));
+            step=6;
             break;
 
         case 10:
