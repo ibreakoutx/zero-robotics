@@ -148,8 +148,6 @@ void init(){
 
 	for (int i=0;i<NUMBER_OF_ITEMS;i++)
 	    itemAvailable[i] = 1;
-	//itemAvailable[LARGE_1] = 0;
-	//itemAvailable[LARGE_2] = 0;
 }
 
 //Compute distance between 2 coordinates
@@ -173,7 +171,9 @@ int getClosestAvailableItem() {
     float minDist = 10.0;//Initialize to large value
     int minDistItem = NUMBER_OF_ITEMS + 1 ; //Initialize to ID out of bounds
     for(int i=0;i<NUMBER_OF_ITEMS;i++) {
-        if ( itemAvailable[i] && game.hasItem(i) != OPPONENT_ID ) {
+        if ( game.hasItem(i) == OPPONENT_ID )
+            itemAvailable[i] = 0;
+        if ( itemAvailable[i] ) {
              float dist = computeDistance(myState,itemPosn[i]);
              if ( minDist > dist) {
                  minDist = dist ;
@@ -252,15 +252,21 @@ void loop(){
         case 5:
             DEBUG(("step %d",step));
             game.dropSPS();
-            item_id = getClosestAvailableItem() ;
-            DEBUG(("Closest item is: %d",item_id));
-            getItemApproachInfo( item_id, posn, orient ) ;
-            DEBUG(("posn: %f, %f, %f",posn[0],posn[1],posn[2]));
-            DEBUG(("orient: %f, %f, %f",orient[0],orient[1],orient[2]));
             step++;
             break ;
 
         case 6:
+            item_id = getClosestAvailableItem() ;
+            DEBUG(("Closest item is: %d",item_id));
+            if ( item_id < NUMBER_OF_ITEMS ) {
+                getItemApproachInfo( item_id, posn, orient ) ;
+                DEBUG(("posn: %f, %f, %f",posn[0],posn[1],posn[2]));
+                DEBUG(("orient: %f, %f, %f",orient[0],orient[1],orient[2]));
+                step++;
+            }
+            break ;
+
+        case 7:
             DEBUG(("step %d",step));
             goToPosition(posn,0.02,STEP_NO_INC);
             api.setAttitudeTarget(orient);
@@ -270,7 +276,7 @@ void loop(){
             }
             break;
 
-        case 7:
+        case 8:
             DEBUG(("step %d",step));
             DEBUG(("item 0 picked up by %d",game.hasItem(0)));
             if ( game.getZone(zoneInfo) ) {
@@ -281,24 +287,18 @@ void loop(){
             step++;
             break;
 
-        case 8:
+        case 9:
             DEBUG(("step %d",step));
             goToPosition(zonePosn,zonePosnTolerance,STEP_INC);
             break;
 
-        case 9:
+        case 10:
             DEBUG(("step %d",step));
             game.dropItem();
             DEBUG(("Dropped item"));
             //Indicate this item is no longer available
             itemAvailable[item_id] = 0;
-
-            item_id = getClosestAvailableItem() ;
-            DEBUG(("Closest item is: %d",item_id));
-            getItemApproachInfo( item_id, posn, orient ) ;
-            DEBUG(("posn: %f, %f, %f",posn[0],posn[1],posn[2]));
-            DEBUG(("orient: %f, %f, %f",orient[0],orient[1],orient[2]));
-            step=6;//Go back and pick up next item
+            step = 6;//loop back to find next closest item
             break;
 
 	}//switch
