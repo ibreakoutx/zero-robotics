@@ -13,6 +13,7 @@ int step ;
 float posn[3];
 float myState[12];
 float velocity[3];
+float velocityMagnitude;
 
 void init(){
 	//This function is called once when your code is first loaded.
@@ -29,6 +30,8 @@ void init(){
 	posn[0] = 0.5;
 	posn[1] = -0.5;
 	posn[2] = 0.0;
+
+	velocityMagnitude = 0.1;
 }
 
 //Returns magnitude of Destination vector
@@ -60,6 +63,8 @@ void goFastMove(float posn[]) {
     float dist;
     float speed;
     float vec[3];
+    float velocityVec[3];
+
     dist = calcDestinationVec( vec, posn );
     //speed = calcVelocityVec( velocity );
 
@@ -77,14 +82,20 @@ void goFastMove(float posn[]) {
 	        else {
     	        DEBUG(("ACCEL, dist = %f",dist));
     	        DEBUG(("ACCEL, fmDist/2 = %f",fmDist * 0.5));
-	            setForceAccel(fmVec);
-	            api.setForces(forces);
+    	       for(int i=0;i<3;i++)
+                  velocityVec[i] = velocityMagnitude * vec[i];
+	            //setForceAccel(fmVec);
+	            //api.setForces(forces);
+	            api.setVelocityTarget(velocityVec);
 	        }
 	       break ;
 	   case 1:
 	       DEBUG(("DE-ACCEL, dist = %f",dist));
-           setForceDeAccel(fmVec);
-	       api.setForces(forces);
+           //setForceDeAccel(fmVec);
+	       //api.setForces(forces);
+	       for(int i=0;i<3;i++)
+             velocityVec[i] = 0.0;
+	       api.setVelocityTarget(velocityVec);
 	       //inner product is the magnitude of the
 	       //vectors multiplied by the cosine of the
 	       //angle between them. If they point in opposite
@@ -122,8 +133,8 @@ void setForceZero() {
 void loop(){
 	//This function is called once per second.  Use it to control the satellite.
     api.getMyZRState(myState);
-    step = 0;
-    api.setPositionTarget(posn);
+    //step = 0;
+    //api.setPositionTarget(posn);
 
     switch(step) {
         case 1:

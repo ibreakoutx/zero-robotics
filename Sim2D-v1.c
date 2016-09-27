@@ -91,17 +91,17 @@ void init(){
 
 	itemApproachOffset[LARGE_1]=0.16;
 	itemApproachOffset[LARGE_2]=0.16;
-    itemApproachOffset[MEDIUM_1]=0.16;
-	itemApproachOffset[MEDIUM_2]=0.16;
-	itemApproachOffset[SMALL_1]=0.16;
-	itemApproachOffset[SMALL_2]=0.16;
+    itemApproachOffset[MEDIUM_1]=0.15;
+	itemApproachOffset[MEDIUM_2]=0.15;
+	itemApproachOffset[SMALL_1]=0.13;
+	itemApproachOffset[SMALL_2]=0.13;
 
 	spsPosn[0][0] =  0.50;
 	spsPosn[0][1] = -0.55;
 	spsPosn[0][2] =  0.0;
 
 	spsPosn[1][0] =  0.50;
-	spsPosn[1][1] =  0.55;
+	spsPosn[1][1] =  0.35;
 	spsPosn[1][2] =  0.0;
 
 	spsPosn[2][0] = -0.50;
@@ -278,24 +278,34 @@ void loop(){
 
         case 8:
             DEBUG(("step %d",step));
-            DEBUG(("item 0 picked up by %d",game.hasItem(0)));
+            DEBUG(("item %d picked up by player %d",item_id,game.hasItem(item_id)));
             if ( game.getZone(zoneInfo) ) {
                 DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
             }
-            zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
-            zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
+            // zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
+            // zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
+            zonePosn[0] = zoneInfo[0]  ;
+            if (zoneInfo[1] < 0) {
+                setFloatArray(orient,faceDown,3);
+                zonePosn[1] = zoneInfo[1] + zoneCenterOffset;
+            }
+            else {
+                zonePosn[1] = zoneInfo[1] - zoneCenterOffset;
+                setFloatArray(orient,faceUp,3);
+            }
             step++;
             break;
 
         case 9:
             DEBUG(("step %d",step));
+            api.setAttitudeTarget(orient);
             goToPosition(zonePosn,zonePosnTolerance,STEP_INC);
             break;
 
         case 10:
             DEBUG(("step %d",step));
             game.dropItem();
-            DEBUG(("Dropped item"));
+            DEBUG(("Dropped item %d",item_id));
             //Indicate this item is no longer available
             itemAvailable[item_id] = 0;
             step = 6;//loop back to find next closest item
