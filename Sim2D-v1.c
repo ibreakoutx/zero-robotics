@@ -171,8 +171,9 @@ int getClosestAvailableItem() {
     float minDist = 10.0;//Initialize to large value
     int minDistItem = NUMBER_OF_ITEMS + 1 ; //Initialize to ID out of bounds
     for(int i=0;i<NUMBER_OF_ITEMS;i++) {
-        if ( game.hasItem(i) == OPPONENT_ID )
-            itemAvailable[i] = 0;
+        if ( game.hasItem(i) == OPPONENT_ID ) {
+            DEBUG(("Opponent has item %d",i));
+        } else
         if ( itemAvailable[i] ) {
              float dist = computeDistance(myState,itemPosn[i]);
              if ( minDist > dist) {
@@ -224,6 +225,8 @@ void goToPosition( float posn[] , float tolerance , int inc ) {
 void loop(){
 	//This function is called once per second.  Use it to control the satellite.
 	api.getMyZRState(myState);
+	api.setControlMode(CTRL_PD,CTRL_PID);
+    api.setPosGains(0.5,0.01,3.0);
 
 	switch(step) {
 
