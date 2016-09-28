@@ -158,11 +158,23 @@ float computeDistance( float a[], float b[]) {
     return sqrt(sum);
 }
 
-float ABS(float a) {
-    if (a < 0)
-        return -a ;
-    else
-        return a ;
+//The opponent could have moved taken items
+//including those in your assembly zone
+//so update item position before calling
+//routine to find closest available item
+//To account for the fact that an
+//item that was previously placed in your
+//assembly zone could have been moved out
+//calculate the item position distance from
+//the assembly zone, if > sps error, mark
+//that item as available.
+void updateItemPositions() {
+    for (int i=0;i<NUMBER_OF_ITEMS;i++) {
+	    game.getItemLoc( itemPosn[i] , i);
+	    //zoneInfo[4] has the spsTolerance
+	    if ( computeDistance( itemPosn[i] , zoneInfo) > zoneInfo[4] )
+	        itemAvailable[i] = 1;
+    }
 }
 
 //Based on current position of sphere, return ID of
@@ -213,7 +225,7 @@ void getItemApproachInfo( int itemId, float posn[], float orient[] ) {
 }
 
 void goToPosition( float posn[] , float tolerance , int inc ) {
-    float err = ABS(myState[0]-posn[0]) + ABS(myState[1]-posn[1]);
+    float err = fabsf(myState[0]-posn[0]) + fabsf(myState[1]-posn[1]);
     DEBUG(("myState[0]=%f, myState[1]=%f",myState[0],myState[1]));
     DEBUG(("posn[0]=%f, posn[1]=%f, err=%f",posn[0],posn[1],err));
     if (err > tolerance)
@@ -267,10 +279,14 @@ void loop(){
         case 5:
             DEBUG(("step %d",step));
             game.dropSPS();
-            step++;
+            if ( game.getZone(zoneInfo) ) {
+                DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
+                step++;
+            }
             break ;
 
         case 6:
+            updateItemPositions();
             item_id = getClosestAvailableItem() ;
             DEBUG(("Closest item is: %d",item_id));
             if ( item_id < NUMBER_OF_ITEMS ) {
@@ -289,11 +305,6 @@ void loop(){
         case 7:
             DEBUG(("step %d",step));
             DEBUG(("item %d picked up by player %d",item_id,game.hasItem(item_id)));
-            if ( game.getZone(zoneInfo) ) {
-                DEBUG(("ZoneInfo: %f,%f,%f,%f",zoneInfo[0],zoneInfo[1],zoneInfo[2],zoneInfo[3]));
-            }
-            // zonePosn[0] = zoneInfo[0] - (myState[6] * zoneCenterOffset) ;
-            // zonePosn[1] = zoneInfo[1] - (myState[7] * zoneCenterOffset);
             zonePosn[0] = zoneInfo[0]  ;
             if (zoneInfo[1] < 0) {
                 setFloatArray(orient,faceDown,3);
