@@ -225,8 +225,20 @@ void goToPosition( float posn[] , float tolerance , int inc ) {
 void loop(){
 	//This function is called once per second.  Use it to control the satellite.
 	api.getMyZRState(myState);
-	api.setControlMode(CTRL_PD,CTRL_PID);
-    api.setPosGains(0.5,0.01,3.0);
+	
+	//By default Position controller used PD and
+	//Attitude controller uses PID
+	//not changing it right now
+api.setControlMode(CTRL_PD,CTRL_PID);
+
+//P, I and D values for position controller
+//High P value will increase speed of movement
+//resulting in overshoot, counteract with a higher
+//D value.
+//Experimenting with a few values, came up with this
+//combination, that posted a score of upto 35 in some
+//games.
+	api.setPosGains(0.5,0.01,3.0);
 
 	switch(step) {
 
