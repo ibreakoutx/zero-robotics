@@ -127,13 +127,6 @@ void init(){
 	for(int i=0;i<NUMBER_OF_ITEMS;i++) {
 	    game.getItemLoc( itemPosn[i] , i);
 	}
-/*	itemPosn[LARGE_1][X_COORD] = 0.23;
-	itemPosn[LARGE_1][Y_COORD] = 0.23  ;
-	itemPosn[LARGE_1][Z_COORD] = 0.0 ;
-
-	itemPosn[LARGE_2][X_COORD] = -0.23;
-	itemPosn[LARGE_2][Y_COORD] = -0.23  ;
-	itemPosn[LARGE_2][Z_COORD] = 0.0 ;*/
 
 	faceDown[0] = 0.0;
 	faceDown[1] = -1.0;
