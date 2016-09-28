@@ -1,17 +1,23 @@
 //Declare any variables shared between functions here
 /*
-2-D Intro game, with opponent sphere not operational.
+2-D Intro game, Version 2
+With opponent sphere also operational.
+Highest score posted with opponent Item-bot : 41
+Highest score posted with opponent Item-Thief : 9
 Uses setTargetPosition to move sphere to specified coord.
+Changed parameters of PD controller from default for
+greater speed, comes at the expense of more fuel consumption
 Strategy:
 1. Map out triangle by dropping SPS. To save time, first
    SPS dropped at start location of sphere. 2nd (and last)
    location is close to item LARGE_1.
-2. Pick up item LARGE_1. Approaching from the top.
-3. Move to Assembly zone, drop off LARGE_1.
-4. Find next item that is closest.
-5. Compute coordinates and orientation to approach.
-6. Pick and drop off at assembly zone.
-7. Repeat steps 4 through 6 until time runs out or no more
+2. Update Item positions and availability.
+3. Find closest item includes those picked up by opponent
+4. Compute coordinates and orientation to approach.
+   Adjust based on which quadrant the assembly zone is in
+	 (distinguish between +Y and -Y quadrants)
+5. Pick and drop off at assembly zone.
+6. Repeat steps 2 through 5 until time runs out or no more
    items.
 */
 
