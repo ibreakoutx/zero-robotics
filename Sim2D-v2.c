@@ -171,7 +171,7 @@ void updateItemPositions() {
     for (int i=0;i<NUMBER_OF_ITEMS;i++) {
 	    game.getItemLoc( itemPosn[i] , i);
 	    //zoneInfo[4] has the spsTolerance
-	    if ( computeDistance( itemPosn[i] , zoneInfo) > zoneInfo[4] )
+	    if ( computeDistance( itemPosn[i] , zoneInfo) > 0.3 )
 	        itemAvailable[i] = 1;
     }
 }
